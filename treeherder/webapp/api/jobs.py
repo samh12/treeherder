@@ -7,6 +7,8 @@ from rest_framework.decorators import (detail_route,
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from rest_framework.status import (HTTP_400_BAD_REQUEST,
+                                   HTTP_404_NOT_FOUND)
 
 from treeherder.model.derived import ArtifactsModel
 from treeherder.model.models import (FailureLine,
@@ -77,7 +79,7 @@ class JobsViewSet(viewsets.ViewSet):
 
             return Response(job)
         else:
-            return Response("No job with id: {0}".format(pk), 404)
+            return Response("No job with id: {0}".format(pk), status=HTTP_404_NOT_FOUND)
 
     @with_jobs
     def list(self, request, project, jm):
@@ -134,18 +136,18 @@ class JobsViewSet(viewsets.ViewSet):
                                  state,
                                  ", ".join(jm.STATES)
                              ))},
-                status=400,
+                status=HTTP_400_BAD_REQUEST,
             )
 
         if not pk:  # pragma nocover
-            return Response({"message": "job id required"}, status=400)
+            return Response({"message": "job id required"}, status=HTTP_400_BAD_REQUEST)
 
         obj = jm.get_job(pk)
         if obj:
             jm.set_state(pk, state)
             return Response({"message": "state updated to '{0}'".format(state)})
         else:
-            return Response("No job with id: {0}".format(pk), 404)
+            return Response("No job with id: {0}".format(pk), status=HTTP_404_NOT_FOUND)
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
     @with_jobs
@@ -158,7 +160,7 @@ class JobsViewSet(viewsets.ViewSet):
             jm.cancel_job(request.user.email, job[0])
             return Response({"message": "canceled job '{0}'".format(job[0]['job_guid'])})
         else:
-            return Response("No job with id: {0}".format(pk), 404)
+            return Response("No job with id: {0}".format(pk), status=HTTP_404_NOT_FOUND)
 
     @list_route(methods=['post'], permission_classes=[IsAuthenticated])
     @with_jobs
@@ -177,7 +179,8 @@ class JobsViewSet(viewsets.ViewSet):
                 failure.append(pk)
 
         if failure:
-            return Response("Jobs with id(s): '{0}' were not retriggered.".format(failure), 404)
+            return Response("Jobs with id(s): '{0}' were not retriggered.".format(failure),
+                            status=HTTP_404_NOT_FOUND)
         else:
             return Response({"message": "All jobs successfully retriggered."})
 
@@ -193,7 +196,7 @@ class JobsViewSet(viewsets.ViewSet):
             jm.backfill(request.user.email, job[0])
             return Response({"message": "backfilled job '{0}'".format(job[0]['job_guid'])})
         else:
-            return Response("No job with id: {0}".format(pk), 404)
+            return Response("No job with id: {0}".format(pk), status=HTTP_404_NOT_FOUND)
 
     @detail_route(methods=['get'])
     @with_jobs
@@ -212,7 +215,7 @@ class JobsViewSet(viewsets.ViewSet):
                              for obj in queryset]
             return Response(failure_lines)
         else:
-            return Response("No job with id: {0}".format(pk), 404)
+            return Response("No job with id: {0}".format(pk), status=HTTP_404_NOT_FOUND)
 
     @detail_route(methods=['get'])
     @with_jobs
@@ -222,7 +225,7 @@ class JobsViewSet(viewsets.ViewSet):
         """
         job = jm.get_job(pk)
         if not job:
-            return Response("No job with id: {0}".format(pk), 404)
+            return Response("No job with id: {0}".format(pk), status=HTTP_404_NOT_FOUND)
 
         job = job[0]
         summary = TextLogSummary.objects.filter(
@@ -233,7 +236,8 @@ class JobsViewSet(viewsets.ViewSet):
             raise ValueError("Got multiple TextLogSummaries for the same job")
 
         if not summary:
-            return Response("No text_log_summary generated for job with id: {0}".format(pk), 404)
+            return Response("No text_log_summary generated for job with id: {0}".format(pk),
+                            status=HTTP_404_NOT_FOUND)
 
         with ArtifactsModel(project) as am:
             artifacts = am.get_job_artifact_list(
@@ -291,7 +295,7 @@ class JobsViewSet(viewsets.ViewSet):
 
             return Response(response_body)
         else:
-            return Response("No job with id: {0}".format(pk), 404)
+            return Response("No job with id: {0}".format(pk), status=HTTP_404_NOT_FOUND)
 
     @with_jobs
     def create(self, request, project, jm):
