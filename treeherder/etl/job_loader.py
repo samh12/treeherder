@@ -170,7 +170,12 @@ class JobLoader:
                         "value": link["linkText"],
                         "title": link["label"]
                     })
-
+            # also add jobKind to details
+            job_details.append({
+                "content_type": "raw_html",
+                "value": job["jobKind"],
+                "title": "Job Kind"
+            })
             artifact = {
                 "blob": {
                     "job_details": job_details
