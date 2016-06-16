@@ -1820,7 +1820,8 @@ into chunks of chunk_size size. Returns the number of result sets deleted"""
         from treeherder.log_parser.tasks import parse_job_logs
 
         task_types = {
-            "errorsummary_json": ("store_failure_lines", "store_failure_lines"),
+            # Disabled temporarily due to bug 1278451.
+            # "errorsummary_json": ("store_failure_lines", "store_failure_lines"),
             "buildbot_text": ("parse_log", "log_parser"),
             "builds-4h": ("parse_log", "log_parser"),
         }

@@ -81,7 +81,8 @@ def parse_job_logs(project, tasks):
             if "routing_key" in t:
                 signature.set(routing_key=t["routing_key"])
 
-            if t["func_name"] in ["parse_log", "store_failure_lines"]:
+            # Disabled temporarily due to bug 1278451.
+            if False and t["func_name"] in ["parse_log", "store_failure_lines"]:
                 callback_group.append(signature)
             else:
                 signature.apply_async()
@@ -115,6 +116,8 @@ def store_failure_lines(project, job_guid, job_log, priority):
     """This task is a wrapper for the store_failure_lines command."""
     try:
         logger.debug('Running store_failure_lines for job %s' % job_guid)
+        # Disabled temporarily due to bug 1278451.
+        return
         failureline.store_failure_lines(project, job_guid, job_log)
         if settings.AUTOCLASSIFY_JOBS:
             autoclassify.apply_async(args=[project, job_guid],
@@ -130,6 +133,8 @@ def crossreference_error_lines(project, job_guid):
     newrelic.agent.add_custom_parameter("project", project)
     newrelic.agent.add_custom_parameter("job_guid", job_guid)
     logger.debug("Running crossreference-error-lines for %s" % job_guid)
+    # Disabled temporarily due to bug 1278451.
+    return
     try:
         call_command('crossreference_error_lines', project, job_guid)
     except Exception, e:
